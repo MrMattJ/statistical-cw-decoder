@@ -2,7 +2,13 @@
 
 A real-time Morse Code (CW) decoder using K-Means clustering for automatic timing calibration. This application listens to audio input and decodes Morse code using statistical analysis of signal timing patterns.
 
+**Two versions available:**
+- **Standard Decoder**: Single processor with visualization and histograms
+- **Confidence-Based Decoder**: 4 parallel processors (1s/5s/10s/20s) with progressive confidence refinement ⭐ **Recommended**
+
 ## Features
+
+### Standard Decoder (`statistical_decoder_gui.py`)
 
 - **Real-time decoding** of Morse code from audio input
 - **K-Means clustering** for automatic timing calibration (no manual calibration needed!)
@@ -10,10 +16,25 @@ A real-time Morse Code (CW) decoder using K-Means clustering for automatic timin
   - Signal/Space duration histograms
   - Binary waveform display with color-coded classifications
   - Live decoded text output
+  - Debug console
 - **Adjustable parameters**:
   - Signal/Space strictness (bucket sensitivity)
   - Processing interval (0.25-20 seconds)
   - Lookback window (number of recent samples for calibration)
+
+### Confidence-Based Decoder (`statistical_decoder_confidence.py`) ⭐
+
+- **4 parallel processors** running at 1s, 5s, 10s, and 20s intervals
+- **Progressive confidence visualization**:
+  - Gray (1s) - Fast, initial decode
+  - White (5s) - Medium confidence, replaces gray
+  - Green (10s) - High confidence, replaces white
+  - Cyan (20s) - Maximum confidence, replaces green
+- **Individual controls** for each processor:
+  - Separate strictness settings
+  - Separate signal/space history settings
+- **Simple replacement logic**: Each processor removes all text from the previous level
+- **Debug console** for real-time monitoring
 
 ## Installation
 
@@ -32,19 +53,39 @@ pip install -r requirements.txt
 
 ### Windows
 
-Double-click `launch_decoder.bat` or run:
+**Confidence-Based Decoder (Recommended):**
+```bash
+launch_confidence_decoder.bat
+```
+Or run directly:
+```bash
+pythonw statistical_decoder_confidence.py
+```
 
+**Standard Decoder:**
+```bash
+launch_decoder.bat
+```
+Or run directly:
 ```bash
 pythonw statistical_decoder_gui.py
 ```
 
 ### Mac/Linux
 
+**Confidence-Based Decoder:**
+```bash
+python3 statistical_decoder_confidence.py
+```
+
+**Standard Decoder:**
 ```bash
 python3 statistical_decoder_gui.py
 ```
 
 ## How It Works
+
+### Standard Decoder
 
 The decoder uses a sophisticated statistical approach:
 
@@ -54,6 +95,24 @@ The decoder uses a sophisticated statistical approach:
    - Clusters ON segments into 2 groups: Dit (short) and Dah (long)
    - Clusters OFF segments into 3 groups: Intra-character, Inter-character, and Word spaces
 4. **Symbol-Based Decoding**: Processes each segment as it arrives to build and decode Morse characters in real-time
+
+### Confidence-Based Decoder
+
+The confidence-based decoder runs **4 independent processors in parallel** with a simple replacement strategy:
+
+**Timeline Example:**
+```
+t=1s:  1s processor → "HI" (gray, quick but uncertain)
+t=5s:  5s processor → Deletes ALL gray → "HELLO" (white, better accuracy)
+t=10s: 10s processor → Deletes ALL white → "HELLO" (green, high accuracy)
+t=20s: 20s processor → Deletes ALL green → "HELLO WORLD" (cyan, maximum accuracy)
+```
+
+**Key Advantages:**
+- Immediate feedback (1s processor shows results fast)
+- Progressive accuracy (text gets more reliable over time)
+- Visual confidence (color indicates how certain the decode is)
+- No complex time-window overlap logic - simple and robust
 
 ## Tips for Best Results
 
